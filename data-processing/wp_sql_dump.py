@@ -11,7 +11,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Dict, IO, Iterator, List, Match, Optional, Tuple
 
-from kwnlp_sql_parser.wp_sql_patterns import (
+from wp_sql_patterns import (
     WikipediaSqlRow,
     return_columns_tuple,
     return_valid_table_names,

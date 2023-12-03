@@ -1,5 +1,5 @@
 import shutil
-import wp_sql_dump
+from wp_sql_dump import WikipediaSqlDump, WikipediaSqlCsvDialect
 import os
 import requests
 import subprocess
@@ -293,7 +293,7 @@ def downloadAndCheckFile(file_name, download_url, columns2keep, allowDict, proce
             # for page file = page_is_redirect A value of 1 here indicates the article is a redirect; it is 0 in all other cases.
             print(f"{processedFilename} does not exist")
             print(f"Creating {processedFilename}")
-            wsd = wp_sql_dump.WikipediaSqlDump(file_name, columns2keep, allowDict)
+            wsd = WikipediaSqlDump(file_name, columns2keep, allowDict)
             wsd.to_csv()
         else:
             print(f"The file {file_name} does not exist. Downloading...")
@@ -327,13 +327,13 @@ redirect_final = "enwiki-latest-redirect_CLEANED.csv"
 
 def main():
     downloadAndCheckFile("enwiki-latest-page.sql.gz",
-                         "https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-page.sql.gz", pageColumns,
+                         "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-page.sql.gz", pageColumns,
                          pageAllowlist, page_orig)
     downloadAndCheckFile("enwiki-latest-pagelinks.sql.gz",
-                         "https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-pagelinks.sql.gz",
+                         "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pagelinks.sql.gz",
                          pagelinksColumns, pagelinkAllowlist, pagelinks)
     downloadAndCheckFile("enwiki-latest-redirect.sql.gz",
-                         "https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-redirect.sql.gz",
+                         "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-redirect.sql.gz",
                          redirectColumns, redirectAllowlist, redirect_orig)
     # TODO if you want this to go much quciker change from gz to sql in the 2 line above and extract the sql files manually (preferable)
 
