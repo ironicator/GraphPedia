@@ -139,7 +139,8 @@ def process_and_group(pagefile, input_file, output_pagelinks, output_pagefile):
             if first_column != current_first_column:
                 page_title = PAGE_IDS_TO_TITLES.get(current_first_column)  # .replace("_", " ")
                 current_values_str = '{{{}}}'.format(','.join(current_values))
-                buffer.append([current_first_column, page_title, current_values_str])
+                #buffer.append([current_first_column, page_title, current_values_str])
+                buffer.append([current_first_column, current_values_str])
 
                 # Write to the file after every 100 lines
                 if len(buffer) >= buffer_size:
@@ -165,7 +166,7 @@ def process_and_group(pagefile, input_file, output_pagelinks, output_pagefile):
         if current_first_column is not None:
             page_title = PAGE_IDS_TO_TITLES.get(first_column)
             num_children = len(current_values)
-            writer.writerow([current_first_column, page_title, '{{{}}}'.format(','.join(current_values))])
+            writer.writerow([current_first_column, '{{{}}}'.format(','.join(current_values))])
             new_pagefile_writer.writerow([current_first_column, page_title, num_children])
 
 

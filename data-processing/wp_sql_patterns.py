@@ -387,6 +387,8 @@ _TABLE_COLUMN_PATTERNS = {
         WikipediaSqlColumn("pl_namespace", DIGITS),
         WikipediaSqlColumn("pl_title", ESCAPED_STRING, unquote=True, unescape=True),
         WikipediaSqlColumn("pl_from_namespace", DIGITS),
+        WikipediaSqlColumn("pl_target_id", DIGITS, nullable=True),
+
     ),
 }  # type: Dict[str, Tuple[WikipediaSqlColumn, ...]]
 
