@@ -1,0 +1,3 @@
+psql -U your_username -d your_database_name -f Working_Database.sql
+so for instance:
+psql -U postgres -d postgres -f Working_Database.sql
