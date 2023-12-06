@@ -7,6 +7,7 @@ const {
   DropTable,
   DeleteRowFromUsers,
 } = require("./database");
+var util = require("util");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const { spawn } = require("child_process");
@@ -24,11 +25,22 @@ app.use(bodyParser.json());
 //app.use("/api/users", user);
 
 // spawn new child process to call the python script
-const python = spawn("python", ["./routes/DataFetching/data.py", "Youssef"]);
+// const python = spawn("python", ["../data-processing/dataprocessing_script.py"]);
+// // const python = spawn("python", ["./routes/DataFetching/data.py", "youssef"]);
+// python.stdout.on("data", (data) => {
+//   console.log(data.toString());
+// });
 
-python.stdout.on("data", (data) => {
-  console.log(data.toString());
-});
+// python.stderr.on("data", (data) => {
+//   // As said before, convert the Uint8Array to a readable string.
+//   console.log(data.toString(data));
+// });
+
+// python.on("exit", function (code, signal) {
+//   console.log(
+//     "child process exited with " + `code ${code} and signal ${signal}`
+//   );
+// });
 
 client
   .connect()
@@ -40,8 +52,8 @@ client
 //   .catch((err) => console.log(err));
 
 createTableQuery();
-insertIntoTable("('youssef', 24)");
-getAllRows("Users");
+// insertIntoTable("('youssef', 24)");
+// getAllRows("Users");
 DeleteRowFromUsers("WHERE name='youssef'");
 getAllRows("Users");
 
