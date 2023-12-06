@@ -73,7 +73,7 @@ async function getAllRows(req, res) {
     console.error("Error:", error);
   }
   // finally {
-  //   // await client.end();
+  //   await client.end();
   //   console.log("Connection closed");
   // }
 }
