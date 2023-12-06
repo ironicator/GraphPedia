@@ -1,10 +1,19 @@
 const express = require("express");
+const {
+  client,
+  insertIntoTable,
+  createTableQuery,
+  getAllRows,
+  DropTable,
+  DeleteRowFromUsers,
+} = require("./database");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { spawn } = require("child_process");
 const bodyParser = require("body-parser");
-
+const pg = require("pg");
+require("dotenv").config();
 // var user = require("./routes/api/user");
-
 const app = express();
 
 app.use(express.json());
@@ -13,6 +22,28 @@ app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //app.use("/api/users", user);
+
+// spawn new child process to call the python script
+const python = spawn("python", ["./routes/DataFetching/data.py", "Youssef"]);
+
+python.stdout.on("data", (data) => {
+  console.log(data.toString());
+});
+
+client
+  .connect()
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch((err) => console.log(err));
+
+//   .connect()
+//   .then(() => console.log("Connected to CockroachDB"))
+//   .catch((err) => console.log(err));
+
+createTableQuery();
+insertIntoTable("('youssef', 24)");
+getAllRows("Users");
+DeleteRowFromUsers("WHERE name='youssef'");
+getAllRows("Users");
 
 mongoose
   .connect(
