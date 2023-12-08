@@ -118,8 +118,8 @@ def process_and_group(pagefile, input_file, output_pagelinks, output_pagefile):
             open(output_pagefile, 'w', newline='', encoding='utf-8') as new_pagefile_out:
 
         reader = csv.reader(infile, delimiter=',')
-        writer = csv.writer(outfile, delimiter=',')
-        new_pagefile_writer = csv.writer(new_pagefile_out, delimiter=',')
+        writer = csv.writer(outfile, delimiter='\t')
+        new_pagefile_writer = csv.writer(new_pagefile_out, delimiter='\t')
 
         current_first_column = None
         current_values = set()

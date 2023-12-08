@@ -1,38 +1,35 @@
 const express = require("express");
-const {
-  client,
-  insertIntoTable,
-  createTableQuery,
-  getAllRows,
-  DropTable,
-  DeleteRowFromUsers,
-} = require("./database");
-var util = require("util");
+var DB = require("./routes/api/database");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { spawn } = require("child_process");
+const { spawn, execFile } = require("child_process");
 const bodyParser = require("body-parser");
 const pg = require("pg");
 require("dotenv").config();
-// var user = require("./routes/api/user");
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-//app.use("/api/users", user);
+app.use("/api/postgres/", DB);
 
 // spawn new child process to call the python script
 // const python = spawn("python", ["../data-processing/dataprocessing_script.py"]);
-// // const python = spawn("python", ["./routes/DataFetching/data.py", "youssef"]);
+
+// const python = spawn("python", ["./routes/DataFetching/data.py", "youssef"]);
 // python.stdout.on("data", (data) => {
 //   console.log(data.toString());
 // });
 
 // python.stderr.on("data", (data) => {
-//   // As said before, convert the Uint8Array to a readable string.
+// As said before, convert the Uint8Array to a readable string.
 //   console.log(data.toString(data));
 // });
 
@@ -42,37 +39,44 @@ app.use(bodyParser.json());
 //   );
 // });
 
-client
-  .connect()
-  .then(() => console.log("Connected to PostgreSQL"))
-  .catch((err) => console.log(err));
+// execFile("./databasedump.sh", (stdout, stderr, err) => {
+//   if (error) {
+//     console.log(`Error: ${error}`);
+//     return;
+//   }
+//   if (stderr) {
+//     console.log(`Error: ${stderr}`);
+//     return;
+//   }
+//   console.log(`stdout: ${stdout}`);
+// });
 
+// client
 //   .connect()
-//   .then(() => console.log("Connected to CockroachDB"))
+//   .then(() => console.log("Connected to PostgreSQL"))
 //   .catch((err) => console.log(err));
 
-createTableQuery();
-// insertIntoTable("('youssef', 24)");
-// getAllRows("Users");
-DeleteRowFromUsers("WHERE name='youssef'");
-getAllRows("Users");
+// createTableQuery();
+//  insertIntoTable("('youssef', 24)");
+// QueryResultTable();
+// bfsQuery();
 
-mongoose
-  .connect(
-    "mongodb+srv://admin:admin@cluster0.ll6tz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-    {
-      useNewUrlParser: true,
-      // useFindAndModify: false,
-      // useCreateIndex: true,
-      // useUnifiedTopology: true
-    }
-  )
-  .then(() => console.log("Connected to mongoDB"))
-  .catch((err) => console.log(err));
+// mongoose
+//   .connect(
+//     "mongodb+srv://admin:admin@cluster0.ll6tz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+//     {
+//       useNewUrlParser: true,
+//       // useFindAndModify: false,
+//       // useCreateIndex: true,
+//       // useUnifiedTopology: true
+//     }
+//   )
+//   .then(() => console.log("Connected to mongoDB"))
+//   .catch((err) => console.log(err));
 
 app.use((req, res) => {
   res.status(404).send({ err: "We can not find what you are looking for" });
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server up and running on port ${port}`));
