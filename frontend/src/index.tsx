@@ -7,14 +7,19 @@ import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
 import {Coordinates, EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
-import {animateNodes} from "sigma/utils/animate";
-// axios.get('http://localhost:3000/api/postgres/insertIntoBfs', {params: searchData})
-//     .then(response => {
-//         console.log('Success:', response.data);
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//     });
+import { animateNodes } from "sigma/utils/animate";
+
+const searchData = {
+    text: "('Argentia','Messi')",
+    depth: 1
+}
+axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
+    .then(response => {
+        console.log('Success:', response.data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 
 
 // Function to build the graph from JSON data

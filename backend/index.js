@@ -21,35 +21,30 @@ app.use(bodyParser.json());
 app.use("/api/postgres/", DB);
 
 // spawn new child process to call the python script
-// const python = spawn("python", ["../data-processing/dataprocessing_script.py"]);
+const python = spawn("python", ["../data-processing/dataprocessing_script.py"]);
 
-// const python = spawn("python", ["./routes/DataFetching/data.py", "youssef"]);
-// python.stdout.on("data", (data) => {
-//   console.log(data.toString());
-// });
+python.stderr.on("data", (data) => {
+  // As said before, convert the Uint8Array to a readable string.
+  console.log(data.toString(data));
+});
 
-// python.stderr.on("data", (data) => {
-// As said before, convert the Uint8Array to a readable string.
-//   console.log(data.toString(data));
-// });
+python.on("exit", function (code, signal) {
+  console.log(
+    "child process exited with " + `code ${code} and signal ${signal}`
+  );
+});
 
-// python.on("exit", function (code, signal) {
-//   console.log(
-//     "child process exited with " + `code ${code} and signal ${signal}`
-//   );
-// });
-
-// execFile("./databasedump.sh", (stdout, stderr, err) => {
-//   if (error) {
-//     console.log(`Error: ${error}`);
-//     return;
-//   }
-//   if (stderr) {
-//     console.log(`Error: ${stderr}`);
-//     return;
-//   }
-//   console.log(`stdout: ${stdout}`);
-// });
+execFile("./databasedump.sh", (stdout, stderr, err) => {
+  if (error) {
+    console.log(`Error: ${error}`);
+    return;
+  }
+  if (stderr) {
+    console.log(`Error: ${stderr}`);
+    return;
+  }
+  console.log(`stdout: ${stdout}`);
+});
 
 // client
 //   .connect()

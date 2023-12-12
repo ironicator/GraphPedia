@@ -3,10 +3,10 @@ const pg = require("pg");
 // Local PG admin Client
 const pool = new pg.Pool({
   host: "localhost",
-  user: "khurlee",
-  port: 5432,
-  password: "graphipedia",
-  database: "graphipedia",
+  user: "postgres",
+  port: 5555,
+  password: "admin",
+  database: "postgres",
 });
 
 //Cockroach DB Client

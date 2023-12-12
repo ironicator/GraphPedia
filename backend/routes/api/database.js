@@ -6,7 +6,7 @@ router.get("/getRow", databaseController.getRow);
 router.get("/deleteRow", databaseController.DeleteRowFromUsers);
 router.delete("/DropTable", databaseController.DropTable);
 
-router.get("/insertIntoBfs", databaseController.insertIntoBfs);
+router.post("/insertIntoBfs", databaseController.insertIntoBfs);
 router.get("/bfsQuery", databaseController.bfsQuery);
 router.get("/queryResult", databaseController.QueryResultTable);
 
