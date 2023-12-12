@@ -1,0 +1,25 @@
+[
+  {
+    "from_title": "\"Akra,_Crimea\"",
+    "from_id": 67087220,
+    "to_title": ["Zawiyat_al_ʽUrqub","\"An_Essay_Towards_a_Real_Character,_and_a_Philosophical_Language\"","Catania", "Pamphylian_Greek", "Greek_numerals", "\"Split,_Croatia\"", "Military_of_Mycenaean_Greece", "Aeolis", "Ancient_Greek_cuisine", "Aetolian_League", "Ostracism", "Temple_of_Hephaestus"],
+    "to_id": [17487827, 320404, 44776, 2819735, 166697, 18952408, 48407885, 1715161, 5318527, 636462, 22615, 446745]  },
+  {
+    "from_title": "\"An_Essay_Towards_a_Real_Character,_and_a_Philosophical_Language\"",
+    "from_id": 320404,
+    "to_title": ["\"Argos,_Peloponnese\"","Astrolinguistics", "Spoken_language", "Loxian", "Runyakitara_language", "Kēlen", "Palawa_kani", "Nadsat", "Brithenig", "Solresol", "Comparison_between_Ido_and_Novial"],
+    "to_id": [70011, 11175098, 226988, 3194958, 7530098, 22115666, 14450797, 46264, 425486, 18449430, 8443913]
+  },
+  {
+    "from_title": "\"Argos,_Peloponnese\"",
+    "from_id": 70011,
+    "to_title": ["\"Bayda,_Libya\"","Loxian","AC_Diomidis_Argous", "Palaestra", "Theoclymenus", "Ptolemy_II_Philadelphus"],
+    "to_id": [2120234,3194958, 35963312, 913769, 599317, 84099]
+  },
+  {
+    "from_title": "\"Bayda,_Libya\"",
+    "from_id": 2120234,
+    "to_title": ["Wayback_Machine", "Tobruk", "Cairo", "ʽAziziya", "Olive", "Zawiyat_al_ʽUrqub"],
+    "to_id": [23538754, 405871, 6293, 24250561, 22479, 17487827]
+  }
+  ]
