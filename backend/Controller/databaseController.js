@@ -3,12 +3,11 @@ const pg = require("pg");
 // Local PG admin Client
 const pool = new pg.Pool({
   host: "localhost",
-  user: "khurlee-",
-  port: 5432,
-  password: "graphipedia",
-  database: "graphipedia",
+  user: "postgres",
+  port: 5555,
+  password: "admin",
+  database: "postgres",
 });
-
 
 //Cockroach DB Client
 // const client = new pg.Client({
@@ -28,10 +27,10 @@ exports.createTableQuery = async (req, res) => {
     // client.connect();
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS Users (
-                                         id SERIAL PRIMARY KEY,
-                                         name VARCHAR(255),
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
         age INT
-        );
+      );
     `;
 
     await client.query(createTableQuery);
@@ -104,10 +103,10 @@ exports.QueryResultTable = async (req, res) => {
     // client.connect();
     const Query = `DROP TABLE IF EXISTS QueryResult CASCADE;
     CREATE TABLE QueryResult (
-                               from_title      varchar(255),
-                               from_id         integer,
-                               to_title        text[],
-                               to_id           integer[]
+    from_title      varchar(255),
+    from_id         integer,
+    to_title        text[],
+    to_id           integer[]
     );`;
     await client.query(Query);
     console.log("Table created successfully");
@@ -119,7 +118,6 @@ exports.QueryResultTable = async (req, res) => {
     console.log("Connection closed");
   }
 };
-
 exports.bfsQuery = async (req, res) => {
   const client = await pool.connect();
 
@@ -176,7 +174,7 @@ exports.getRow = async (req, res) => {
   try {
     // client.connect();
     const result = await client.query(
-        `select ${req.body.select} from ${req.body.from} where ${req.body.where}`
+      `select ${req.body.select} from ${req.body.from} where ${req.body.where}`
     );
     console.log("Query result:", result.rows);
     return res.json({ data: result.rows });

@@ -7,10 +7,19 @@ import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
 import {Coordinates, EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
-import {animateNodes} from "sigma/utils/animate";
+import { animateNodes } from "sigma/utils/animate";
 
-
-
+const searchData = {
+    text: "('Argentia','Messi')",
+    depth: 1
+}
+axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
+    .then(response => {
+        console.log('Success:', response.data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 
 
 // Function to build the graph from JSON data
@@ -312,8 +321,6 @@ function buildGraphFromJson(data) {
         return res;
     });
 
-
-
     // Render edges accordingly to the internal state:
     // 1. If a node is hovered, the edge is hidden if it is not connected to the
     //    node
@@ -348,46 +355,6 @@ function loadJsonAndBuildGraph() {
 
 
 
-
-
-// function to handle the search
-function handleSearch() {
-    // Retrieve input values
-    // @ts-ignore
-    const searchText = document.getElementById("search-text").value;
-    // @ts-ignore
-    const searchDepth = parseInt(document.getElementById("search-depth").value, 10);
-
-    // Split the searchText by commas and trim each term
-    const searchTerms = searchText.split(',').map(term => term.trim());
-
-    // Format the terms into the required structure: "('term1','term2',...)"
-    const formattedTerms = searchTerms.map(term => `'${term}'`).join(',');
-
-    const searchData = {
-        text: `(${formattedTerms})`,
-        depth: searchDepth
-    };
-
-    // Make the Axios POST request
-    axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
-        .then(response => {
-            console.log('Success:', response.data);
-            buildGraphFromJson(response.data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-}
-
-// Call loadJsonAndBuildGraph() at the start
+// Call the function to start the process
 loadJsonAndBuildGraph();
-
-// Add an event listener to your search button
-document.addEventListener("DOMContentLoaded", () => {
-    const searchButton = document.getElementById("search-button");
-    if (searchButton) {
-        searchButton.addEventListener("click", handleSearch);
-    }
-});
 
