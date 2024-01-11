@@ -11,10 +11,10 @@
 
 <div id="sigma-container"></div>
 <div id="loader"><span>⌛</span></div>
-<div id="tooltip" style="display: none; position: absolute; z-index: 1000;"></div>
+
 <div id="buttons">
   <button id="random">
-    <span><img src="./GiPerspectiveDiceSixFaces.svg" />random</span>
+    <span><img alt="" src="./GiPerspectiveDiceSixFaces.svg" />random</span>
   </button>
 
   <button id="forceatlas2">
@@ -30,6 +30,7 @@
 </div>
 
 <div id="search">
+
   <input type="search" id="search-input" list="suggestions" placeholder="Try searching for a node..." />
   <datalist id="suggestions"></datalist>
   <input type="search" id="search-text"  placeholder="Try searching for a text..." />
@@ -40,7 +41,9 @@
   </select>
   <button id="search-button">Search</button>
 </div>
+<div id="tooltip" class="hidden"></div>
 
 <script src="build/bundle.js"></script>
+
 </body>
 </html>

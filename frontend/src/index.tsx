@@ -268,6 +268,63 @@ function buildGraphFromJson(data) {
         if (node) {
             state.hoveredNode = node;
             state.hoveredNeighbors = new Set(graph.neighbors(node));
+            renderer.on("enterNode", ({ node }) => {
+                const nodeData = graph.getNodeAttributes(node);
+                const tooltip = document.getElementById('tooltip');
+                // Sanitize and encode the label for URL
+                const encodedLabel = encodeURIComponent(nodeData.label.replace(/"/g, ''));
+
+
+                // Fetch Wikipedia preview
+                fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodedLabel}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        tooltip.innerHTML = `
+                <p>${data.extract}</p>
+                <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(encodedLabel)}" target="_blank">Access the Wikipedia page</a>
+            `;
+                        tooltip.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching Wikipedia summary:', error);
+                    });
+                const nodePosition = renderer.getNodeDisplayData(node);
+
+                if (nodePosition) {
+                    // Position the tooltip to the right of the node
+                    const offsetX = 2; // Horizontal offset from the node
+                    const offsetY = 2; // Vertical offset from the node
+
+                    // Translate graph coordinates to screen coordinates
+                    const screenPosition = renderer.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
+
+                    tooltip.style.left = (screenPosition.x + offsetX) + 'px';
+                    tooltip.style.top = (screenPosition.y + offsetY) + 'px';
+                    tooltip.style.display = 'block';
+                }
+            });
+            let isCursorOverTooltip = false;
+
+            const tooltip = document.getElementById('tooltip');
+            tooltip.addEventListener('mouseenter', () => {
+                isCursorOverTooltip = true;
+            });
+            tooltip.addEventListener('mouseleave', () => {
+                isCursorOverTooltip = false;
+                tooltip.style.display = 'none'; // Hide the tooltip when cursor leaves
+            });
+
+            renderer.on("leaveNode", () => {
+                // Delay hiding tooltip to allow time to move the cursor onto the tooltip
+                setTimeout(() => {
+                    // Check if the cursor is not over the tooltip before hiding
+                    if (!isCursorOverTooltip) {
+                        const tooltip = document.getElementById('tooltip');
+                        tooltip.style.display = 'none';
+                    }
+                }, 6000); // Adjust delay as needed
+            })
+
         } else {
             state.hoveredNode = undefined;
             state.hoveredNeighbors = undefined;
