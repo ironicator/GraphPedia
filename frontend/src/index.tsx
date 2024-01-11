@@ -7,19 +7,14 @@ import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
 import {Coordinates, EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
-import { animateNodes } from "sigma/utils/animate";
-
-const searchData = {
-    text: "('Argentia','Messi')",
-    depth: 1
-}
-axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
-    .then(response => {
-        console.log('Success:', response.data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+import {animateNodes} from "sigma/utils/animate";
+// axios.post('http://localhost:3000/api/postgres/insertIntoBfs', {params: searchData})
+//     .then(response => {
+//         console.log('Success:', response.data);
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//     });
 
 
 // Function to build the graph from JSON data
@@ -27,7 +22,6 @@ function buildGraphFromJson(data) {
 
     const graph = new Graph();
     // Create a map for page titles
-    const pageTitles = new Map();
 
 
     function addEdgeIfNeeded(sourceId, targetId) {
@@ -352,6 +346,41 @@ function loadJsonAndBuildGraph() {
             console.error('Error fetching or parsing JSON:', error);
         });
 }
+
+function handleSearch() {
+    // Retrieve input values
+    // @ts-ignore
+    const searchText = document.getElementById("search-text").value;
+    const searchDepthElement = document.getElementById("search-depth");
+    // @ts-ignore
+    const searchDepth = parseInt(searchDepthElement.options[searchDepthElement.selectedIndex].value, 10);
+
+    // Process search terms
+    const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
+    const searchData = {
+        text: `(${searchTerms})`,
+        depth: searchDepth
+    };
+
+    // Make the Axios POST request
+    axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
+        .then(response => {
+            console.log('Success:', response.data);
+            buildGraphFromJson(response.data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Bind the search button event listener
+document.addEventListener("DOMContentLoaded", () => {
+    const searchButton = document.getElementById("search-button");
+    if (searchButton) {
+        searchButton.addEventListener("click", handleSearch);
+    }
+});
+
 
 
 
