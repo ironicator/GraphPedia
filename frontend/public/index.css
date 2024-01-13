@@ -167,7 +167,6 @@ body,
     width: 300px;
     max-height: 500px;
     overflow-y: auto;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 
@@ -176,4 +175,7 @@ body,
     display: none;
 }
 
-#search-button
+#search-button:active {
+    background-color: #0056b3; /* Green background when button is pressed */
+    color: white; /* White text color */
+}

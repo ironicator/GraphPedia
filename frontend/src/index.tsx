@@ -293,16 +293,19 @@ function buildGraphFromJson(data) {
                 if (nodePosition) {
                     // Position the tooltip to the right of the node
                     const offsetX = 2; // Horizontal offset from the node
-                    const offsetY = 2; // Vertical offset from the node
+                    const offsetY = 0; // Vertical offset from the node
 
                     // Translate graph coordinates to screen coordinates
                     const screenPosition = renderer.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
 
                     tooltip.style.left = (screenPosition.x + offsetX) + 'px';
+
                     tooltip.style.top = (screenPosition.y + offsetY) + 'px';
+
                     tooltip.style.display = 'block';
                 }
             });
+
             let isCursorOverTooltip = false;
 
             const tooltip = document.getElementById('tooltip');
