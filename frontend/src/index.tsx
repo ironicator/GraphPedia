@@ -419,9 +419,9 @@ function handleSearch() {
     const searchDepth = parseInt(searchDepthElement.options[searchDepthElement.selectedIndex].value, 10);
 
     // Process search terms
-    const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
+    // const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
     const searchData = {
-        text: `(${searchTerms})`,
+        text: `('${searchText}')`,
         depth: searchDepth
     };
 

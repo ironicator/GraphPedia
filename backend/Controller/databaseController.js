@@ -68,8 +68,8 @@ exports.insertIntoBfs = async (req, res) => {
   const client = await pool.connect();
   try {
     // client.connect();
-    const insertDataQuery = `SELECT * FROM bfsQuery($1::text, $2::integer)`;
-    const result = await client.query(insertDataQuery, [req.body.text, req.body.depth]);
+    const insertDataQuery = `SELECT * FROM bfsQuery(${req.body.text }::text, ${req.body.depth }::integer)`;
+    const result = await client.query(insertDataQuery);
     console.log("Query result:", result.rows);
     return res.send({ data: result.rows });
   } catch (error) {
@@ -265,3 +265,6 @@ exports.DropTable = async (req, res) => {
 // public.pages p2 ON p2.page_id = idpairs.to_id) inside
 // GROUP BY inside.from_title, inside.from_id
 // $$ LANGUAGE sql;
+
+// GRANT SELECT, INSERT, UPDATE, DELETE ON pages TO khurlee;
+// GRANT SELECT, INSERT, UPDATE, DELETE ON pagelinks TO khurlee;
