@@ -8,20 +8,23 @@ import FA2Layout from "graphology-layout-forceatlas2/worker";
 import axios from "axios"
 import {Coordinates, EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
 import {animateNodes} from "sigma/utils/animate";
-// axios.post('http://localhost:3000/api/postgres/insertIntoBfs', {params: searchData})
-//     .then(response => {
-//         console.log('Success:', response.data);
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//     });
-
 
 // Function to build the graph from JSON data
+let renderer;
 function buildGraphFromJson(data) {
 
-    const graph = new Graph();
+
+
+    // const graph = new Graph();
+    if (renderer) {
+        renderer.kill();
+    }
+    let graph = new Graph();
+    graph.clear()
+
+
     // Create a map for page titles
+
 
 
     function addEdgeIfNeeded(sourceId, targetId) {
@@ -201,7 +204,7 @@ function buildGraphFromJson(data) {
     // bind method to the random button
     circularButton.addEventListener("click", circularLayout);
 
-    const renderer = new Sigma(graph, container);
+    renderer = new Sigma(graph, container);
 
     const searchInput = document.getElementById("search-input") as HTMLInputElement;
 
@@ -425,8 +428,8 @@ function handleSearch() {
     // Make the Axios POST request
     axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
         .then(response => {
-            console.log('Success:', response.data);
-            buildGraphFromJson(response.data);
+            console.log('Success:', response.data.data);
+            buildGraphFromJson(response.data.data);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -440,9 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
         searchButton.addEventListener("click", handleSearch);
     }
 });
-
-
-
 
 // Call the function to start the process
 loadJsonAndBuildGraph();
