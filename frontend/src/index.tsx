@@ -3,6 +3,8 @@ import Graph from "graphology";
 import circular from "graphology-layout/circular";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
+
+
 import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
@@ -12,9 +14,6 @@ import {animateNodes} from "sigma/utils/animate";
 // Function to build the graph from JSON data
 let renderer;
 function buildGraphFromJson(data) {
-
-
-
     // const graph = new Graph();
     if (renderer) {
         renderer.kill();
@@ -24,9 +23,6 @@ function buildGraphFromJson(data) {
 
 
     // Create a map for page titles
-
-
-
     function addEdgeIfNeeded(sourceId, targetId) {
         if (!graph.hasEdge(sourceId, targetId)) {
             graph.addEdge(sourceId, targetId);
@@ -52,46 +48,75 @@ function buildGraphFromJson(data) {
         });
     });
 
-    // Set sizes based on degree
+    // Set sizes based on individual reference counts
     const minSize = 8, maxSize = 50;
-    // @ts-ignore
-    const minDegree = Math.min(...degreeMap.values());
-    // @ts-ignore
-    const maxDegree = Math.max(...degreeMap.values());
 
-    function calculateNodeSize(degree) {
-        if (minDegree === maxDegree)
-            return maxSize;
-        return minSize + ((degree - minDegree) / (maxDegree - minDegree)) * (maxSize - minSize);
+// Extract all individual reference counts from the data
+    const allReferenceCounts = data.flatMap(item => item.reference_count);
+
+// Calculate the minimum and maximum reference counts for scaling
+    const minReferenceCount = Math.min(...allReferenceCounts);
+    console.log("min:", minReferenceCount)
+    const maxReferenceCount = Math.max(...allReferenceCounts);
+    console.log("max:", maxReferenceCount)
+    if (minReferenceCount!=Infinity && maxReferenceCount!= Infinity && minReferenceCount!=maxReferenceCount){
+        // @ts-ignore
+        document.getElementById("labels-threshold").min = minReferenceCount
+        // @ts-ignore
+        document.getElementById("labels-threshold").max = maxReferenceCount
+        // @ts-ignore
+        document.getElementById("labels-threshold").step = (maxReferenceCount-minReferenceCount)/100
     }
 
-    // Add nodes with sizes
+
+
+// Function to calculate node size based on individual reference count
+    function calculateNodeSize(referenceCount) {
+        if (minReferenceCount === maxReferenceCount)
+
+            return maxSize;
+        return minSize + ((referenceCount - minReferenceCount) / (maxReferenceCount - minReferenceCount)) * (maxSize - minSize);
+    }
+
+
+// Add nodes with sizes
+    // Add nodes with sizes and colors
     data.forEach(item => {
         const fromId = item.from_id;
         const fromTitle = item.from_title;
 
-        const fromDegree = degreeMap.get(fromId);
-        const fromSize = calculateNodeSize(fromDegree);
+        // Set size for the parent node, if needed
+        // You might want to set a default size or calculate it differently
+        addNodeIfNeeded(fromId, fromTitle, 30, true, maxReferenceCount); // true for parent
 
-        addNodeIfNeeded(fromId, fromTitle, fromSize);
 
         item.to_id.forEach((childId, index) => {
             const childTitle = item.to_title[index];
-            const childDegree = degreeMap.get(childId);
-            const childSize = calculateNodeSize(childDegree);
+            const childReferenceCount = item.reference_count[index];
+            const childSize = calculateNodeSize(childReferenceCount);
 
-            addNodeIfNeeded(childId, childTitle, childSize);
+            addNodeIfNeeded(childId, childTitle, childSize, false, item.reference_count[index]); // false for child
             addEdgeIfNeeded(fromId, childId);
         });
     });
 
 
-    function addNodeIfNeeded(id, label, size) {
+    function addNodeIfNeeded(id, label, size, isParent, referenceCount) {
         if (!graph.hasNode(id)) {
+            // Node does not exist yet, add it with the appropriate color
+            const color = isParent ? "#4444aa" : "#aa4444";
+            const Parent = !!isParent;
             graph.addNode(id, {
                 label: label,
                 size: size,
-                color: "#4444aa"
+                color: color,
+                referenceCount: referenceCount,
+                isParent: Parent
+            });
+        } else if (isParent) {
+            // Node already exists but is now identified as a parent, update its color only
+            graph.updateNode(id, node => {
+                return { ...node, color: "#4444aa", isParent:true};
             });
         }
     }
@@ -207,6 +232,7 @@ function buildGraphFromJson(data) {
     renderer = new Sigma(graph, container);
 
     const searchInput = document.getElementById("search-input") as HTMLInputElement;
+
 
     interface State {
         hoveredNode?: string;
@@ -378,6 +404,45 @@ function buildGraphFromJson(data) {
         return res;
     });
 
+    // Add click event listener to nodes
+    renderer.on("clickNode", ({ node }) => {
+        const wikiPageId = node; // node is the Wikipedia page ID
+
+        if (wikiPageId) {
+            // Construct the Wikipedia URL using the page ID
+            const wikiUrl = `https://en.wikipedia.org/?curid=${wikiPageId}`;
+            // Open the Wikipedia page in a new tab
+            window.open(wikiUrl, '_blank');
+        }
+    });
+
+    const labelsThresholdRange = document.getElementById("labels-threshold") as HTMLInputElement;
+
+    labelsThresholdRange.addEventListener('input', function(e) {
+        // @ts-ignore
+        const threshold = parseFloat(e.target.value);
+
+        // Loop through each node to determine visibility based on the threshold
+        graph.forEachNode((node, attributes) => {
+            if(!attributes.isParent){
+                if (attributes.referenceCount < threshold) {
+                    // Hide the node if its reference count is below the threshold
+                    graph.setNodeAttribute(node, 'hidden', true);
+                } else {
+                    // Show the node otherwise
+                    graph.setNodeAttribute(node, 'hidden', false);
+                }
+            }
+
+
+        });
+        renderer.refresh();
+    })
+
+
+
+
+
     // Render edges accordingly to the internal state:
     // 1. If a node is hovered, the edge is hidden if it is not connected to the
     //    node
@@ -417,12 +482,20 @@ function handleSearch() {
     const searchDepthElement = document.getElementById("search-depth");
     // @ts-ignore
     const searchDepth = parseInt(searchDepthElement.options[searchDepthElement.selectedIndex].value, 10);
+    // @ts-ignore
+    let threshold = 0
+    // @ts-ignore
+    if (document.getElementById("threshold").checked){
+        // @ts-ignore
+        threshold = parseInt(document.getElementById("labels-threshold").value)
+    }
 
     // Process search terms
     // const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
     const searchData = {
         text: `('${searchText}')`,
-        depth: searchDepth
+        depth: searchDepth,
+        threshold: threshold
     };
 
     // Make the Axios POST request

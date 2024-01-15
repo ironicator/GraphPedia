@@ -68,7 +68,7 @@ exports.insertIntoBfs = async (req, res) => {
   const client = await pool.connect();
   try {
     // client.connect();
-    const insertDataQuery = `SELECT * FROM bfsQuery(${req.body.text }::text, ${req.body.depth }::integer)`;
+    const insertDataQuery = `SELECT * FROM bfsQueryWithRelations(${req.body.text }::text, ${req.body.depth }::integer, ${req.body.threshold }::integer)`;
     const result = await client.query(insertDataQuery);
     console.log("Query result:", result.rows);
     return res.send({ data: result.rows });
