@@ -22,7 +22,6 @@ function buildGraphFromJson(data) {
     graph.clear()
 
 
-    // Create a map for page titles
     function addEdgeIfNeeded(sourceId, targetId) {
         if (!graph.hasEdge(sourceId, targetId)) {
             graph.addEdge(sourceId, targetId);
@@ -83,7 +82,10 @@ function buildGraphFromJson(data) {
     // Add nodes with sizes and colors
     data.forEach(item => {
         const fromId = item.from_id;
-        const fromTitle = item.from_title;
+        let fromTitle = item.from_title;
+        if (typeof fromTitle === 'string') {
+            fromTitle = fromTitle.replace(/_/g, ' '); // Replace underscores with spaces
+        }
 
         // Set size for the parent node, if needed
         // You might want to set a default size or calculate it differently
@@ -106,6 +108,9 @@ function buildGraphFromJson(data) {
             // Node does not exist yet, add it with the appropriate color
             const color = isParent ? "#4444aa" : "#aa4444";
             const Parent = !!isParent;
+            if(typeof label === 'string'){
+                label = label.replace(/_/g, ' ');
+            }
             graph.addNode(id, {
                 label: label,
                 size: size,
