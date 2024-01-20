@@ -8,7 +8,7 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
-import {Coordinates, EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
+import { EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
 import {animateNodes} from "sigma/utils/animate";
 
 // Function to build the graph from JSON data
@@ -53,19 +53,44 @@ function buildGraphFromJson(data) {
 // Extract all individual reference counts from the data
     const allReferenceCounts = data.flatMap(item => item.reference_count);
 
-// Calculate the minimum and maximum reference counts for scaling
+    // Calculate the minimum and maximum reference counts for scaling
     const minReferenceCount = Math.min(...allReferenceCounts);
-    console.log("min:", minReferenceCount)
     const maxReferenceCount = Math.max(...allReferenceCounts);
-    console.log("max:", maxReferenceCount)
-    if (minReferenceCount!=Infinity && maxReferenceCount!= Infinity && minReferenceCount!=maxReferenceCount){
-        // @ts-ignore
-        document.getElementById("labels-threshold").min = minReferenceCount
-        // @ts-ignore
-        document.getElementById("labels-threshold").max = maxReferenceCount
-        // @ts-ignore
-        document.getElementById("labels-threshold").step = (maxReferenceCount-minReferenceCount)/100
+
+    function calculateMean(data) {
+        const total = data.reduce((acc, val) => acc + val, 0);
+        return total / data.length;
     }
+
+    function calculateStandardDeviation(data, mean) {
+        const squareDiffs = data.map(value => {
+            const diff = value - mean;
+            return diff * diff;
+        });
+        const avgSquareDiff = calculateMean(squareDiffs);
+        return Math.sqrt(avgSquareDiff);
+    }
+    if (minReferenceCount!==Infinity && maxReferenceCount!== Infinity && minReferenceCount!==maxReferenceCount){
+
+
+        const mean = calculateMean(allReferenceCounts);
+        const standardDeviation = calculateStandardDeviation(allReferenceCounts, mean);
+
+        // Use mean ± 2 sigmas for slider range
+        const minThreshold = Math.max(mean - 2 * standardDeviation, 0);
+        const maxThreshold = mean + 2 * standardDeviation;
+
+
+
+        // @ts-ignore
+        document.getElementById("labels-threshold").min = minThreshold;
+        // @ts-ignore
+        document.getElementById("labels-threshold").max = maxThreshold;
+        // @ts-ignore
+        document.getElementById("labels-threshold").step = (maxThreshold - minThreshold) / 100;
+
+    }
+
 
 
 
@@ -256,46 +281,58 @@ function buildGraphFromJson(data) {
 
 
     // Actions:
-    function setSearchQuery(query: string) {
+    function setSearchQuery(query) {
+        // Ensure query is a string
+        if (typeof query !== 'string') {
+            console.error('setSearchQuery: query is not a string', query);
+            return;
+        }
+
         state.searchQuery = query;
 
-        if (searchInput.value !== query) searchInput.value = query;
+        if (searchInput.value !== query) {
+            searchInput.value = query;
+        }
 
-        if (query) {
-            const lcQuery = query.toLowerCase();
+        // Handle empty query
+        if (!query) {
+            state.selectedNode = undefined;
+            state.suggestions = undefined;
+            renderer.refresh();
+            return;
+        }
+
+        const lcQuery = query.toLowerCase();
+        try {
             const suggestions = graph
                 .nodes()
-                .map((n) => ({ id: n, label: graph.getNodeAttribute(n, "label") as string }))
-                .filter(({ label }) => label.toLowerCase().includes(lcQuery));
+                .map((n) => ({
+                    id: n,
+                    label: graph.getNodeAttribute(n, "label")
+                }))
+                .filter(({ label }) => label && label.toLowerCase().includes(lcQuery));
 
-            // If we have a single perfect match, them we remove the suggestions, and
-            // we consider the user has selected a node through the datalist
-            // autocomplete:
             if (suggestions.length === 1 && suggestions[0].label === query) {
                 state.selectedNode = suggestions[0].id;
                 state.suggestions = undefined;
 
-                // Move the camera to center it on the selected node:
-                const nodePosition = renderer.getNodeDisplayData(state.selectedNode) as Coordinates;
-                renderer.getCamera().animate(nodePosition, {
-                    duration: 500,
-                });
-            }
-            // Else, we display the suggestions list:
-            else {
+                // Move camera to center on selected node
+                const nodePosition = renderer.getNodeDisplayData(state.selectedNode);
+                if (nodePosition) {
+                    renderer.getCamera().animate(nodePosition, { duration: 500 });
+                }
+            } else {
                 state.selectedNode = undefined;
                 state.suggestions = new Set(suggestions.map(({ id }) => id));
             }
-        }
-        // If the query is empty, then we reset the selectedNode / suggestions state:
-        else {
-            state.selectedNode = undefined;
-            state.suggestions = undefined;
+        } catch (error) {
+            console.error('Error in setSearchQuery:', error);
         }
 
-        // Refresh rendering:
+        // Refresh rendering
         renderer.refresh();
     }
+
 
 
     function setHoveredNode(node?: string) {
@@ -375,9 +412,7 @@ function buildGraphFromJson(data) {
     searchInput.addEventListener("input", () => {
         setSearchQuery(searchInput.value || "");
     });
-    searchInput.addEventListener("blur", () => {
-        setSearchQuery("");
-    });
+
 
     // Bind graph interactions:
     renderer.on("enterNode", ({ node }) => {
