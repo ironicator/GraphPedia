@@ -39,6 +39,8 @@ CREATE TABLE query_result_2 (
     reference_count integer[]
 );
 
+DROP FUNCTION bfsQueryWithRelations;
+
 CREATE OR REPLACE FUNCTION bfsQueryWithRelations(articleNames text, maxDepth integer) RETURNS SETOF query_result_2 AS $$
     WITH RECURSIVE RecursivePageCTE AS (
         SELECT
@@ -73,3 +75,20 @@ CREATE OR REPLACE FUNCTION bfsQueryWithRelations(articleNames text, maxDepth int
     GROUP BY inside.from_title, inside.from_id
 
 $$ LANGUAGE sql;
+
+select * from bfsQueryWithRelations('Audi,Germany,Spain,Budapest,BMW', 2);
+
+select * from relations;
+
+
+DROP TABLE IF EXISTS title_matching_result CASCADE;
+CREATE TABLE title_matching_result (
+    page_id         integer primary key,
+    page_title      varchar(255)
+);
+DROP FUNCTION titleMatching(userInput text, howMany integer);
+CREATE OR REPLACE FUNCTION titleMatching(userInput text, howMany integer) RETURNS SETOF title_matching_result AS $$
+    SELECT page_id, page_title FROM relations where lower(relations.page_title) like '%' || replace(lower(userInput), ' ', '_') || '%' order by relations.reference_count desc limit howMany;
+$$ LANGUAGE sql;
+
+SELECT * FROM titleMatching('gypt', 5);
