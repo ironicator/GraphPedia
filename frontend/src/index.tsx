@@ -581,19 +581,17 @@ function handleSearch() {
         const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
         suggestionsDatalist.innerHTML = ''; // Clear existing options
         suggestions.forEach(suggestion => {
+            // Replace underscores with spaces in the suggestion
+            const suggestionWithSpaces = suggestion.replace(/_/g, ' ');
+
             const suggestionElement = document.createElement('div');
-            suggestionElement.textContent = suggestion;
+            suggestionElement.textContent = suggestionWithSpaces;
             suggestionElement.className = 'suggestion-item'; // Assign the class for styling
             suggestionElement.onclick = () => handleSuggestionClick(suggestion);
             suggestionsDatalist.appendChild(suggestionElement);
         });
-
-        // suggestions.forEach(suggestion => {
-        //     const option = document.createElement('option');
-        //     option.value = suggestion;
-        //     suggestionsDatalist.appendChild(option);
-        // });
     }
+
 
 // Attach an event listener to the search input
     const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
