@@ -36,8 +36,8 @@
 
 <div class="panels">
   <div class="panel">
-    <input type="search" id="search-input" list="suggestions" placeholder="Try searching for a link..." />
-    <datalist id="suggestions"></datalist>
+    <input type="search" id="search-input" placeholder="Try searching for a link..." />
+
   </div>
   <div class="panel">
     <div><img id="descIcon" alt="" src="./info.png" /><strong>Description</strong></div>
@@ -52,12 +52,13 @@
 
 
 <div id="search">
-
-  <input type="search" id="search-text"  placeholder="Try searching for a text..." />
-  <select id="search-depth">
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
+  <div id="word-container"></div>
+  <input type="search" id="search-text" list="suggestions" class="input-mimic" placeholder="Try searching for a text..." />
+  <div id="suggestions"></div>
+  <select id="search-option">
+    <option value="1">All Nodes Depth = 1</option>
+    <option value="2">All Nodes Depth = 2</option>
+    <option value="3">Only Shared Nodes</option>
   </select>
   <button id="search-button">Search</button>
 </div>

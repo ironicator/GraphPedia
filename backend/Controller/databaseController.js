@@ -64,11 +64,36 @@ exports.insertIntoTable = async (req, res) => {
   }
 };
 
+exports.autoComplete = async(req, res) =>{
+  const client = await pool.connect();
+  try{
+    console.log(req.body.word)
+    let insertDataQuery = `SELECT * FROM titleMatching('${req.body.word}')`;
+    const result = await client.query(insertDataQuery);
+    console.log("Query result:", result.rows);
+    return res.send({ data: result.rows });
+  }catch (error) {
+    console.error("Error:", error);
+  } finally {
+    client.release();
+    console.log("Connection closed");
+  }
+
+}
+
+
 exports.insertIntoBfs = async (req, res) => {
   const client = await pool.connect();
   try {
-    // client.connect();
-    const insertDataQuery = `SELECT * FROM bfsQueryWithRelations(${req.body.text }::text, ${req.body.depth }::integer, ${req.body.threshold }::integer)`;
+    let option = req.body.option
+    let insertDataQuery;
+    if(option < 3) {
+      insertDataQuery = `SELECT *
+                               FROM bfsQueryWithRelations(${req.body.text}::text, ${req.body.option}::integer, ${req.body.threshold}::integer)`;
+    }else{
+      insertDataQuery = `SELECT * FROM queryWithShared(${req.body.text }::text)`;
+    }
+
     const result = await client.query(insertDataQuery);
     console.log("Query result:", result.rows);
     return res.send({ data: result.rows });

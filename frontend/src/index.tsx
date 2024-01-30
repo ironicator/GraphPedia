@@ -71,8 +71,6 @@ function buildGraphFromJson(data) {
         return Math.sqrt(avgSquareDiff);
     }
     if (minReferenceCount!==Infinity && maxReferenceCount!== Infinity && minReferenceCount!==maxReferenceCount){
-
-
         const mean = calculateMean(allReferenceCounts);
         const standardDeviation = calculateStandardDeviation(allReferenceCounts, mean);
 
@@ -518,10 +516,22 @@ function loadJsonAndBuildGraph() {
 function handleSearch() {
     // Retrieve input values
     // @ts-ignore
-    const searchText = document.getElementById("search-text").value;
-    const searchDepthElement = document.getElementById("search-depth");
+    // const searchText = document.getElementById("search-text").value;
+    function getSearchText() {
+        const wordBoxes = document.querySelectorAll('.word-box');
+        const words = Array.from(wordBoxes).map(box => {
+            // Assuming the word is the first child node of the word-box
+            return box.childNodes[0].textContent.trim();
+        });
+        return words.join(',');
+    }
+
+    const searchText = getSearchText();
+    console.log("search text",searchText); // This will log the search text composed of words separated by commas.
+
+    const searchOptionElement = document.getElementById("search-option");
     // @ts-ignore
-    const searchDepth = parseInt(searchDepthElement.options[searchDepthElement.selectedIndex].value, 10);
+    const searchOption = parseInt(searchOptionElement.options[searchOptionElement.selectedIndex].value, 10);
     // @ts-ignore
     let threshold = 0
     // @ts-ignore
@@ -532,12 +542,116 @@ function handleSearch() {
 
     // Process search terms
     // const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
+
+    function addWordToContainer(word) {
+        const container = document.getElementById('word-container');
+        const wordBox = document.createElement('span');
+        wordBox.className = 'word-box';
+        wordBox.textContent = word;
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'X';
+        deleteBtn.onclick = function() {
+            container.removeChild(wordBox);
+        };
+
+        wordBox.appendChild(deleteBtn);
+        container.appendChild(wordBox);
+    }
+
+    function handleSuggestionClick(suggestion) {
+        // @ts-ignore
+        document.getElementById('search-text').value = ''
+        const words = suggestion.split(',');
+        words.forEach(addWordToContainer);
+    }
+
+
+
+    // function to call autoComplete
+    async function updateSuggestions() {
+        // Get the current value of the search input
+        const searchInputValue = (document.getElementById('search-text') as HTMLInputElement).value;
+
+        // Fetch suggestions based on the input value
+        const suggestions = await getSuggestions(searchInputValue);
+
+        // Update the datalist with these suggestions
+        const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
+        suggestionsDatalist.innerHTML = ''; // Clear existing options
+        suggestions.forEach(suggestion => {
+            const suggestionElement = document.createElement('div');
+            suggestionElement.textContent = suggestion;
+            suggestionElement.className = 'suggestion-item'; // Assign the class for styling
+            suggestionElement.onclick = () => handleSuggestionClick(suggestion);
+            suggestionsDatalist.appendChild(suggestionElement);
+        });
+
+        // suggestions.forEach(suggestion => {
+        //     const option = document.createElement('option');
+        //     option.value = suggestion;
+        //     suggestionsDatalist.appendChild(option);
+        // });
+    }
+
+// Attach an event listener to the search input
+    const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
+
+    const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
+    searchInputSugs.addEventListener('input', updateSuggestions);
+
+    async function getSuggestions(inputValue: string): Promise<string[]> {
+        let sugs = [];
+        let suggestionInput = {
+            word: inputValue
+        };
+
+        try {
+            const response = await axios.post('http://localhost:3000/api/postgres/autoComplete', suggestionInput);
+            const data = response.data.data;
+            data.forEach(sug => {
+                sugs.push(sug.page_title);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+
+        return sugs; // Return the suggestions
+    }
+
+
+
+    // Function to show suggestions
+    function showSuggestions() {
+        suggestionsDatalist.style.display = 'block';
+    }
+
+// Function to hide suggestions
+    function hideSuggestions() {
+        suggestionsDatalist.style.display = 'none';
+    }
+
+// Show suggestions when the input field is focused
+    searchInputSugs.addEventListener('focus', showSuggestions);
+
+// Hide suggestions with a delay when the input field loses focus
+    searchInputSugs.addEventListener('blur', () => {
+        setTimeout(hideSuggestions, 200); // Delay to allow click event on suggestions
+    });
+
+// Ensure clicking on a suggestion doesn't immediately hide the container
+    suggestionsDatalist.addEventListener('mousedown', (event) => {
+        event.preventDefault(); // Prevents the blur event on the input
+    });
+
+
+
     const searchData = {
         text: `('${searchText}')`,
-        depth: searchDepth,
+        option: searchOption,
         threshold: threshold
     };
-
     // Make the Axios POST request
     axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
         .then(response => {
@@ -547,6 +661,8 @@ function handleSearch() {
         .catch(error => {
             console.error('Error:', error);
         });
+
+
 }
 
 // Bind the search button event listener
@@ -554,6 +670,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchButton = document.getElementById("search-button");
     if (searchButton) {
         searchButton.addEventListener("click", handleSearch);
+    }
+
+    // Add event listener for Enter key press
+    const searchInput = document.getElementById("search-text");
+    if (searchInput) {
+        searchInput.addEventListener("keyup", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent the default form submission
+                handleSearch();
+            }
+        });
     }
 });
 

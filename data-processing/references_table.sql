@@ -118,59 +118,20 @@ CREATE TABLE title_matching_result (
     page_id         integer primary key,
     page_title      varchar(255)
 );
-DROP FUNCTION titleMatching(userInput text, howMany integer);
-CREATE OR REPLACE FUNCTION titleMatching(userInput text, howMany integer) RETURNS SETOF title_matching_result AS $$
-    SELECT page_id, page_title FROM relations where lower(relations.page_title) like replace(lower(userInput), ' ', '_') || '%' order by relations.reference_count desc limit howMany;
+
+
+
+DROP FUNCTION IF EXISTS titleMatching(userInput text);
+CREATE OR REPLACE FUNCTION titleMatching(userInput text) RETURNS SETOF title_matching_result AS $$
+    SELECT page_id, page_title FROM pages where lower(pages.page_title) like replace(lower(userInput), ' ', '_') || '%' order by length(page_title) limit 10;
 $$ LANGUAGE sql;
+
+
+
+
+
 CREATE INDEX idx_title ON relations (page_title);
 
-SELECT * FROM titleMatching('pol', 5);
+SELECT * FROM titleMatching('polan');
 
-SELECT count(*) FROM relations where relations.children_count < 20;
-
-
-DROP TABLE IF EXISTS rank_table CASCADE;
-CREATE TABLE rank_table (
-    page_id         integer primary key,
-    rank_val        float,
-    output_count    integer,
-    input           integer[]
-);
-
-delete from relations where children_count < 20;
-
-DO $$
-DECLARE
-  node_number INT := (select count(*) from relations);
-  iteration_count INT := 15; -- You can adjust the number of iterations
-  damping_factor FLOAT := 0.85;
-BEGIN
-  DELETE from rank_table;
-  RAISE NOTICE 'Rank table empty!';
-  INSERT INTO rank_table (page_id, rank_val, output_count, input)
-  SELECT relations.page_id, 1.0/node_number, relations.children_count, relations.references FROM relations;
-  RAISE NOTICE 'Rank table initial values set';
-  -- Run the PageRank algorithm for the specified number of iterations
-  FOR i IN 1..iteration_count LOOP
-    -- Update the temporary table with the new PageRank values
-    UPDATE rank_table AS pr
-    SET rank_val = (1-damping_factor)/node_number + damping_factor * (
-      SELECT
-        SUM(p.rank_val / p.output_count)
-      FROM
-        unnest(pr.input) AS ref_page
-      JOIN
-        rank_table p ON p.page_id = ref_page
-    );
-
-    -- Print intermediate results (optional)
-    RAISE NOTICE 'Iteration %', i;
-  END LOOP;
-END $$;
-
-
-SELECT r.page_title from relations r join rank_table rt on r.page_id = rt.page_id order by rt.rank_val desc limit 100;
-
-SELECT ARRAY_REMOVE(
-ARRAY[1, 23, 150, -1, 2, -3, -1, 12, 121], (-1, 2)
-);
+SELECT * FROM titleMatching('gypt');
