@@ -4,17 +4,27 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" type="text/css" href="index.css">
+  <link rel="stylesheet"  id="dynamic-style" type="text/css" href="home.css">
+  <link rel="icon" href="gene-sequence-svgrepo-com.svg">
+
   <title>Graphipedia</title>
 </head>
 <body>
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Sorry, there's no result, try again bitte🤠</p>
+  </div>
+</div>
 
 <div id="sigma-container"></div>
-<div id="loader"><span>⌛</span></div>
+<div class="aftersearch" id="loader"><span>⌛</span></div>
+<div class="logo-container" id="logo">
+  <img src="./graphipedia_logo.svg" alt="Custom Logo">
+</div>
 
 
-
-<div id="buttons">
+<div id="buttons" class="aftersearch">
   <button id="random">
     <span><img alt="" src="./GiPerspectiveDiceSixFaces.svg" />random</span>
   </button>
@@ -29,12 +39,12 @@
   <button id="circular">
     <span><img alt="" src="./BiLoaderCircle.svg" />circular</span>
   </button>
-  <input id="threshold" type="checkbox">Search with Threshold</input>
+  <input id="threshold" type="checkbox">Search with Threshold
   <input id="labels-threshold" type="range" min="0" max="100000" step="1000" />
 
 </div>
 
-<div class="panels">
+<div class="panels aftersearch">
   <div class="panel">
     <input type="search" id="search-input" placeholder="Try searching for a link..." />
 
@@ -45,11 +55,6 @@
 
   </div>
 </div>
-
-<div class="controls">
-
-</div>
-
 
 <div id="search">
   <div id="word-container"></div>
@@ -63,7 +68,7 @@
   <button id="search-button">Search</button>
 </div>
 
-<script src="build/bundle.js"></script>
+<script>var exports = {};</script>
 
 </body>
 </html>

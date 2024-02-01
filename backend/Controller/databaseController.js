@@ -66,6 +66,7 @@ exports.insertIntoTable = async (req, res) => {
 
 exports.autoComplete = async(req, res) =>{
   const client = await pool.connect();
+  console.log("calling autocomplete!")
   try{
     console.log(req.body.word)
     let insertDataQuery = `SELECT * FROM titleMatching('${req.body.word}')`;
@@ -78,7 +79,6 @@ exports.autoComplete = async(req, res) =>{
     client.release();
     console.log("Connection closed");
   }
-
 }
 
 

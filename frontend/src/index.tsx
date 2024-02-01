@@ -14,10 +14,20 @@ import {animateNodes} from "sigma/utils/animate";
 // Function to build the graph from JSON data
 let renderer;
 function buildGraphFromJson(data) {
-    // const graph = new Graph();
+    const link = document.getElementById('dynamic-style');
+    // @ts-ignore
+    link.href = data.length > 0 ? "index.css" : "home.css";
+
+    // Delay the initialization of Sigma
+    setTimeout(() => {
+        renderer = new Sigma(graph, container);
+    }, 1000);
+
     if (renderer) {
         renderer.kill();
     }
+
+
     let graph = new Graph();
     graph.clear()
 
@@ -162,8 +172,10 @@ function buildGraphFromJson(data) {
     const loader = document.getElementById("loader") as HTMLElement;
     loader.style.display = "none";
 
+
     // Finally, draw the graph using sigma:
     const container = document.getElementById("sigma-container") as HTMLElement;
+
 
 
     //buttons
@@ -257,7 +269,7 @@ function buildGraphFromJson(data) {
     // bind method to the random button
     circularButton.addEventListener("click", circularLayout);
 
-    renderer = new Sigma(graph, container);
+
 
     const searchInput = document.getElementById("search-input") as HTMLInputElement;
 
@@ -502,16 +514,7 @@ function buildGraphFromJson(data) {
 }
 
 // Function to load JSON and build the graph
-function loadJsonAndBuildGraph() {
-    fetch('./exampleOutput.json')
-        .then(response => response.json())
-        .then(data => {
-            buildGraphFromJson(data);
-        })
-        .catch(error => {
-            console.error('Error fetching or parsing JSON:', error);
-        });
-}
+
 
 function handleSearch() {
     // Retrieve input values
@@ -519,15 +522,25 @@ function handleSearch() {
     // const searchText = document.getElementById("search-text").value;
     function getSearchText() {
         const wordBoxes = document.querySelectorAll('.word-box');
-        const words = Array.from(wordBoxes).map(box => {
-            // Assuming the word is the first child node of the word-box
-            return box.childNodes[0].textContent.trim();
-        });
-        return words.join(',');
+        if (wordBoxes.length > 0){
+            const words = Array.from(wordBoxes).map(box => {
+                // Assuming the word is the first child node of the word-box
+                return box.childNodes[0].textContent.trim();
+            });
+            return words.join(',');
+        } else {
+            // @ts-ignore
+            let words = document.getElementById("search-text").value.split(',').map(w=>{
+                return w.trim()
+            }).join(',')
+
+
+            return words
+        }
+
     }
 
     const searchText = getSearchText();
-    console.log("search text",searchText); // This will log the search text composed of words separated by commas.
 
     const searchOptionElement = document.getElementById("search-option");
     // @ts-ignore
@@ -571,6 +584,7 @@ function handleSearch() {
 
     // function to call autoComplete
     async function updateSuggestions() {
+        console.log("Calling updateSuggestions")
         // Get the current value of the search input
         const searchInputValue = (document.getElementById('search-text') as HTMLInputElement).value;
 
@@ -618,8 +632,6 @@ function handleSearch() {
         return sugs; // Return the suggestions
     }
 
-
-
     // Function to show suggestions
     function showSuggestions() {
         suggestionsDatalist.style.display = 'block';
@@ -643,18 +655,39 @@ function handleSearch() {
         event.preventDefault(); // Prevents the blur event on the input
     });
 
-
-
     const searchData = {
         text: `('${searchText}')`,
         option: searchOption,
         threshold: threshold
     };
+
     // Make the Axios POST request
     axios.post('http://localhost:3000/api/postgres/insertIntoBfs', searchData)
-        .then(response => {
+        .then(async response => {
             console.log('Success:', response.data.data);
-            buildGraphFromJson(response.data.data);
+            if (response.data.data.length > 0) {
+                // fake search
+                buildGraphFromJson(response.data.data);
+            } else {
+                // fake search
+
+                var modal = document.getElementById("myModal");
+                modal.style.display = "block";
+
+                var span = document.getElementsByClassName("close")[0];
+
+                // @ts-ignore
+                span.onclick = function () {
+                    modal.style.display = "none";
+                }
+
+                window.onclick = function (event) {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            }
+
         })
         .catch(error => {
             console.error('Error:', error);
@@ -682,6 +715,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Call the function to start the process
-loadJsonAndBuildGraph();
+
 
