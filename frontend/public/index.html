@@ -17,8 +17,37 @@
       color: #000000; /* Dark grey color for better readability */
       text-align: justify; /* Justify text for a clean look */
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-      margin: 10px; /* Add some margin around paragraphs */
     }
+    .tooltip {
+      display: none; /* Hide by default */
+      position: absolute; /* Position it */
+      background-color: #333; /* Dark background */
+      color: #fff; /* Light font color */
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px 10px;
+      z-index: 1; /* Place it above other items */
+
+      /* Position it above the range input (adjust as needed) */
+      top: 100%;
+      left: 50%;
+
+      /* Optional: Add an arrow */
+      border: 1px solid #ddd; /* Light grey border */
+    }
+
+    /* Arrow (optional) */
+    .tooltip::after {
+      content: " ";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #f9f9f9 transparent transparent transparent;
+    }
+
 
   </style>
 </head>
@@ -53,6 +82,10 @@
     <span><img alt="" src="./BiLoaderCircle.svg" />circular</span>
   </button>
   <input id="threshold" type="checkbox">Search with Threshold
+  <div class="tooltip" id="thresholdTooltip">Search with threshold</div>
+
+  <div class="tooltip" id="range-tooltip">Filter some value by moving the threshold</div>
+
   <input id="labels-threshold" type="range" min="0" max="100000" step="1000" />
 
 </div>
@@ -82,6 +115,28 @@
 </div>
 
 <script>var exports = {};</script>
+<script>
+  const enableThreshold = document.getElementById('threshold')
+  const rangeInput = document.getElementById('labels-threshold');
+  const tooltip1 = document.getElementById('range-tooltip');
+  const tooltip2 = document.getElementById('thresholdTooltip');
+  enableThreshold.addEventListener('mouseover', () => {
+    tooltip2.style.display = 'block';
+  });
+
+  enableThreshold.addEventListener('mouseout', () => {
+    tooltip2.style.display = 'none';
+  });
+
+  rangeInput.addEventListener('mouseover', () => {
+    tooltip1.style.display = 'block';
+  });
+
+  rangeInput.addEventListener('mouseout', () => {
+    tooltip1.style.display = 'none';
+  });
+</script>
+
 
 </body>
 </html>

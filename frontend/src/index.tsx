@@ -632,18 +632,6 @@ function handleSearch() {
         threshold = parseInt(document.getElementById("labels-threshold").value)
     }
 
-    // Process search terms
-    // const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
-
-
-
-
-
-
-
-    // function to call autoComplete
-
-
 
 // Attach an event listener to the search input
     const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
@@ -655,21 +643,6 @@ function handleSearch() {
 
 
     searchInputSugs.addEventListener('input', debouncedUpdateSuggestions);
-
-
-
-
-    // Function to show suggestions
-
-
-    // Function to hide suggestions
-    function hideSuggestions() {
-        suggestionsDatalist.style.display = 'none';
-    }
-
-
-
-
 
     const searchData = {
         text: `('${searchText}')`,
