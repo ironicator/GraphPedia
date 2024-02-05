@@ -13,25 +13,176 @@ import {animateNodes} from "sigma/utils/animate";
 
 // Function to build the graph from JSON data
 let renderer;
+
+
+let graph = new Graph();
+
+const searchInput = document.getElementById("search-input") as HTMLInputElement;
+
+interface State {
+    hoveredNode?: string;
+    searchQuery: string;
+
+    // State derived from query:
+    selectedNode?: string;
+    suggestions?: Set<string>;
+
+    // State derived from hovered node:
+    hoveredNeighbors?: Set<string>;
+}
+const state: State = { searchQuery: "" };
+// Actions:
+function setSearchQuery(query) {
+    // Ensure query is a string
+    if (typeof query !== 'string') {
+        console.error('setSearchQuery: query is not a string', query);
+        return;
+    }
+
+    state.searchQuery = query;
+
+    if (searchInput.value !== query) {
+        searchInput.value = query;
+    }
+
+    // Handle empty query
+    if (!query) {
+        state.selectedNode = undefined;
+        state.suggestions = undefined;
+        renderer.refresh();
+        return;
+    }
+
+    const lcQuery = query.toLowerCase();
+    try {
+        const suggestions = graph
+            .nodes()
+            .map((n) => ({
+                id: n,
+                label: graph.getNodeAttribute(n, "label")
+            }))
+            .filter(({ label }) => label && label.toLowerCase().includes(lcQuery));
+
+        if (suggestions.length === 1 && suggestions[0].label === query) {
+            state.selectedNode = suggestions[0].id;
+            state.suggestions = undefined;
+
+            // Move camera to center on selected node
+            const nodePosition = renderer.getNodeDisplayData(state.selectedNode);
+            if (nodePosition) {
+                renderer.getCamera().animate(nodePosition, { duration: 500 });
+            }
+        } else {
+            state.selectedNode = undefined;
+            state.suggestions = new Set(suggestions.map(({ id }) => id));
+        }
+    } catch (error) {
+        console.error('Error in setSearchQuery:', error);
+    }
+
+    // Refresh rendering
+    renderer.refresh();
+}
+function showSuggestions() {
+    const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
+    suggestionsDatalist.style.display = 'block';
+}
+function hideSuggestions() {
+    const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
+    suggestionsDatalist.style.display = 'none';
+}
+function addWordToContainer(word) {
+    const container = document.getElementById('word-container');
+    const wordBox = document.createElement('span');
+    wordBox.className = 'word-box';
+    wordBox.textContent = word;
+
+    const deleteBtn = document.createElement('span');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = 'X';
+    deleteBtn.onclick = function() {
+        container.removeChild(wordBox);
+    };
+
+    wordBox.appendChild(deleteBtn);
+    container.appendChild(wordBox);
+}
+
+function handleSuggestionClick(suggestion) {
+    // @ts-ignore
+    document.getElementById('search-text').value = ''
+    const words = suggestion.split(',');
+    words.forEach(addWordToContainer);
+    hideSuggestions()
+    document.getElementById('search-text').focus()
+
+}
+function debounce(func, wait) {
+    let timeout;
+
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+async function updateSuggestions() {
+    showSuggestions()
+    const searchInputValue = (document.getElementById('search-text') as HTMLInputElement).value.replace('\'', '\'\'');
+
+    if (searchInputValue.length !== 0){
+        console.log("Calling updateSuggestions")
+        // Get the current value of the search input
+
+        // Fetch suggestions based on the input value
+        const suggestions = await getSuggestions(searchInputValue);
+
+        // Update the datalist with these suggestions
+        const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
+        suggestionsDatalist.innerHTML = ''; // Clear existing options
+        suggestions.forEach(suggestion => {
+            // Replace underscores with spaces in the suggestion
+            const suggestionWithSpaces = suggestion.replace(/_/g, ' ');
+
+            const suggestionElement = document.createElement('div');
+            suggestionElement.textContent = suggestionWithSpaces;
+            suggestionElement.className = 'suggestion-item'; // Assign the class for styling
+            suggestionElement.onclick = () => handleSuggestionClick(suggestion);
+            suggestionsDatalist.appendChild(suggestionElement);
+        });
+    }
+}
+async function getSuggestions(inputValue: string): Promise<string[]> {
+    let sugs = [];
+    let suggestionInput = {
+        word: inputValue,
+    };
+
+    try {
+        const response = await axios.post('http://localhost:3000/api/postgres/autoComplete', suggestionInput);
+        const data = response.data.data;
+        data.forEach(sug => {
+            sugs.push(sug.page_title);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    return sugs; // Return the suggestions
+}
 function buildGraphFromJson(data) {
     const link = document.getElementById('dynamic-style');
     // @ts-ignore
     link.href = data.length > 0 ? "index.css" : "home.css";
 
-    // Delay the initialization of Sigma
-    setTimeout(() => {
-        renderer = new Sigma(graph, container);
-    }, 1000);
-
     if (renderer) {
         renderer.kill();
     }
-
-
-    let graph = new Graph();
     graph.clear()
-
-
     function addEdgeIfNeeded(sourceId, targetId) {
         if (!graph.hasEdge(sourceId, targetId)) {
             graph.addEdge(sourceId, targetId);
@@ -60,7 +211,7 @@ function buildGraphFromJson(data) {
     // Set sizes based on individual reference counts
     const minSize = 8, maxSize = 50;
 
-// Extract all individual reference counts from the data
+    // Extract all individual reference counts from the data
     const allReferenceCounts = data.flatMap(item => item.reference_count);
 
     // Calculate the minimum and maximum reference counts for scaling
@@ -102,7 +253,7 @@ function buildGraphFromJson(data) {
 
 
 
-// Function to calculate node size based on individual reference count
+    // Function to calculate node size based on individual reference count
     function calculateNodeSize(referenceCount) {
         if (minReferenceCount === maxReferenceCount)
 
@@ -111,7 +262,7 @@ function buildGraphFromJson(data) {
     }
 
 
-// Add nodes with sizes
+    // Add nodes with sizes
     // Add nodes with sizes and colors
     data.forEach(item => {
         const fromId = item.from_id;
@@ -165,9 +316,6 @@ function buildGraphFromJson(data) {
 
     forceAtlas2.assign(graph, { settings, iterations: 150 }); // Increase iterations
 
-
-
-
     // Hide the loader from the DOM:
     const loader = document.getElementById("loader") as HTMLElement;
     loader.style.display = "none";
@@ -175,8 +323,6 @@ function buildGraphFromJson(data) {
 
     // Finally, draw the graph using sigma:
     const container = document.getElementById("sigma-container") as HTMLElement;
-
-
 
     //buttons
     const FA2Button = document.getElementById("forceatlas2") as HTMLElement;
@@ -252,7 +398,7 @@ function buildGraphFromJson(data) {
         cancelCurrentAnimation = animateNodes(graph, randomPositions, { duration: 2000 });
     }
 
-// bind method to the random button
+    // bind method to the random button
     randomButton.addEventListener("click", randomLayout);
 
     /** CIRCULAR LAYOUT **/
@@ -274,163 +420,104 @@ function buildGraphFromJson(data) {
     const searchInput = document.getElementById("search-input") as HTMLInputElement;
 
 
-    interface State {
-        hoveredNode?: string;
-        searchQuery: string;
 
-        // State derived from query:
-        selectedNode?: string;
-        suggestions?: Set<string>;
 
-        // State derived from hovered node:
-        hoveredNeighbors?: Set<string>;
-    }
-    const state: State = { searchQuery: "" };
+    // Delay the initialization of Sigma
+    renderer = new Sigma(graph, container);
+    // setTimeout(() => {
+    //     renderer = new Sigma(graph, container);
+    // }, 1);
 
 
 
 
-    // Actions:
-    function setSearchQuery(query) {
-        // Ensure query is a string
-        if (typeof query !== 'string') {
-            console.error('setSearchQuery: query is not a string', query);
-            return;
-        }
 
-        state.searchQuery = query;
+    // Example setup for throttled fetchData function
+    const throttledFetchData = throttle((node) => {
+        fetchDataAndShowTooltip(node);
+    }, 200); // Adjust delay as needed
 
-        if (searchInput.value !== query) {
-            searchInput.value = query;
-        }
+    let hideTooltipTimeout;
 
-        // Handle empty query
-        if (!query) {
-            state.selectedNode = undefined;
-            state.suggestions = undefined;
-            renderer.refresh();
-            return;
-        }
-
-        const lcQuery = query.toLowerCase();
-        try {
-            const suggestions = graph
-                .nodes()
-                .map((n) => ({
-                    id: n,
-                    label: graph.getNodeAttribute(n, "label")
-                }))
-                .filter(({ label }) => label && label.toLowerCase().includes(lcQuery));
-
-            if (suggestions.length === 1 && suggestions[0].label === query) {
-                state.selectedNode = suggestions[0].id;
-                state.suggestions = undefined;
-
-                // Move camera to center on selected node
-                const nodePosition = renderer.getNodeDisplayData(state.selectedNode);
-                if (nodePosition) {
-                    renderer.getCamera().animate(nodePosition, { duration: 500 });
-                }
-            } else {
-                state.selectedNode = undefined;
-                state.suggestions = new Set(suggestions.map(({ id }) => id));
-            }
-        } catch (error) {
-            console.error('Error in setSearchQuery:', error);
-        }
-
-        // Refresh rendering
-        renderer.refresh();
-    }
-
-
-
-    function setHoveredNode(node?: string) {
-        if (node) {
-            state.hoveredNode = node;
-            state.hoveredNeighbors = new Set(graph.neighbors(node));
-            renderer.on("enterNode", ({ node }) => {
-                const nodeData = graph.getNodeAttributes(node);
-                const tooltip = document.getElementById('tooltip');
-                // Sanitize and encode the label for URL
-                const encodedLabel = encodeURIComponent(nodeData.label.replace(/"/g, ''));
-
-
-                // Fetch Wikipedia preview
-                fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodedLabel}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        tooltip.innerHTML = `
-                <p>${data.extract}</p>
-                <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(encodedLabel)}" target="_blank">Access the Wikipedia page</a>
-            `;
-                        tooltip.style.display = 'block';
-                    })
-                    .catch(error => {
-                        console.error('Error fetching Wikipedia summary:', error);
-                    });
-                const nodePosition = renderer.getNodeDisplayData(node);
-
-                if (nodePosition) {
-                    // Position the tooltip to the right of the node
-                    const offsetX = 2; // Horizontal offset from the node
-                    const offsetY = 0; // Vertical offset from the node
-
-                    // Translate graph coordinates to screen coordinates
-                    const screenPosition = renderer.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
-
-                    tooltip.style.left = (screenPosition.x + offsetX) + 'px';
-
-                    tooltip.style.top = (screenPosition.y + offsetY) + 'px';
-
-                    tooltip.style.display = 'block';
-                }
-            });
-
-            let isCursorOverTooltip = false;
-
-            const tooltip = document.getElementById('tooltip');
-            tooltip.addEventListener('mouseenter', () => {
-                isCursorOverTooltip = true;
-            });
-            tooltip.addEventListener('mouseleave', () => {
-                isCursorOverTooltip = false;
-                tooltip.style.display = 'none'; // Hide the tooltip when cursor leaves
-            });
-
-            renderer.on("leaveNode", () => {
-                // Delay hiding tooltip to allow time to move the cursor onto the tooltip
-                setTimeout(() => {
-                    // Check if the cursor is not over the tooltip before hiding
-                    if (!isCursorOverTooltip) {
-                        const tooltip = document.getElementById('tooltip');
-                        tooltip.style.display = 'none';
-                    }
-                }, 6000); // Adjust delay as needed
-            })
-
-        } else {
-            state.hoveredNode = undefined;
-            state.hoveredNeighbors = undefined;
-        }
-
-        // Refresh rendering:
-        renderer.refresh();
-    }
-
-    // Bind search input interactions:
-    searchInput.addEventListener("input", () => {
-        setSearchQuery(searchInput.value || "");
-    });
-
-
-    // Bind graph interactions:
     renderer.on("enterNode", ({ node }) => {
-        setHoveredNode(node);
+        clearTimeout(hideTooltipTimeout); // Cancel pending hide operation
+        // @ts-ignore
+        throttledFetchData(node);
     });
+
     renderer.on("leaveNode", () => {
-        setHoveredNode(undefined);
+        // Prepare to hide tooltip, but with a delay to allow moving to the tooltip
+        prepareHideTooltip();
     });
+
+    function prepareHideTooltip() {
+        hideTooltipTimeout = setTimeout(() => {
+            const tooltip = document.getElementById('tooltip');
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }, 500); // Adjust delay as needed
+    }
+
+    const tooltip = document.getElementById('tooltip');
+    tooltip.addEventListener('mouseenter', () => {
+        clearTimeout(hideTooltipTimeout); // Keep showing the tooltip when mouse is over it
+    });
+    tooltip.addEventListener('mouseleave', () => {
+        prepareHideTooltip(); // Hide the tooltip after a delay when mouse leaves
+    });
+
+    function fetchDataAndShowTooltip(node) {
+        const nodeData = graph.getNodeAttributes(node);
+        const tooltip = document.getElementById('tooltip');
+        const encodedLabel = encodeURIComponent(nodeData.label.replace(/"/g, ''));
+
+        // Fetch Wikipedia preview with error handling
+        fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodedLabel}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update and show tooltip
+                tooltip.innerHTML = `<p>${data.extract}</p>`
+                tooltip.style.display = 'block';
+                positionTooltip(node);
+            })
+            .catch(error => console.error('Error fetching Wikipedia summary:', error));
+    }
+
+    function positionTooltip(node) {
+        // Position the tooltip based on the node's position
+        const nodePosition = renderer.getNodeDisplayData(node);
+        const tooltip = document.getElementById('tooltip');
+        if (nodePosition && tooltip) {
+            const screenPosition = renderer.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
+            tooltip.style.left = (screenPosition.x + 2) + 'px'; // offsetX
+            tooltip.style.top = (screenPosition.y) + 'px'; // offsetY
+        }
+    }
+
+
+    // Example throttle function
+    function throttle(func, limit) {
+        let lastFunc;
+        let lastRan;
+        return function() {
+            const context = this;
+            const args = arguments;
+            if (!lastRan) {
+                func.apply(context, args);
+                lastRan = Date.now();
+            } else {
+                clearTimeout(lastFunc);
+                lastFunc = setTimeout(function() {
+                    if ((Date.now() - lastRan) >= limit) {
+                        func.apply(context, args);
+                        lastRan = Date.now();
+                    }
+                }, limit - (Date.now() - lastRan));
+            }
+        }
+    }
+
 
     // Render nodes accordingly to the internal state:
     // 1. If a node is selected, it is highlighted
@@ -488,11 +575,6 @@ function buildGraphFromJson(data) {
         });
         renderer.refresh();
     })
-
-
-
-
-
     // Render edges accordingly to the internal state:
     // 1. If a node is hovered, the edge is hidden if it is not connected to the
     //    node
@@ -512,10 +594,7 @@ function buildGraphFromJson(data) {
         return res;
     });
 }
-
 // Function to load JSON and build the graph
-
-
 function handleSearch() {
     // Retrieve input values
     // @ts-ignore
@@ -525,7 +604,7 @@ function handleSearch() {
         if (wordBoxes.length > 0){
             const words = Array.from(wordBoxes).map(box => {
                 // Assuming the word is the first child node of the word-box
-                return box.childNodes[0].textContent.trim();
+                return box.childNodes[0].textContent.trim().replace('\'', '\'\'');
             });
             return words.join(',');
         } else {
@@ -556,104 +635,41 @@ function handleSearch() {
     // Process search terms
     // const searchTerms = searchText.split(',').map(term => `'${term.trim()}'`).join(',');
 
-    function addWordToContainer(word) {
-        const container = document.getElementById('word-container');
-        const wordBox = document.createElement('span');
-        wordBox.className = 'word-box';
-        wordBox.textContent = word;
 
-        const deleteBtn = document.createElement('span');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.textContent = 'X';
-        deleteBtn.onclick = function() {
-            container.removeChild(wordBox);
-        };
 
-        wordBox.appendChild(deleteBtn);
-        container.appendChild(wordBox);
-    }
 
-    function handleSuggestionClick(suggestion) {
-        // @ts-ignore
-        document.getElementById('search-text').value = ''
-        const words = suggestion.split(',');
-        words.forEach(addWordToContainer);
-    }
 
 
 
     // function to call autoComplete
-    async function updateSuggestions() {
-        console.log("Calling updateSuggestions")
-        // Get the current value of the search input
-        const searchInputValue = (document.getElementById('search-text') as HTMLInputElement).value;
 
-        // Fetch suggestions based on the input value
-        const suggestions = await getSuggestions(searchInputValue);
-
-        // Update the datalist with these suggestions
-        const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
-        suggestionsDatalist.innerHTML = ''; // Clear existing options
-        suggestions.forEach(suggestion => {
-            // Replace underscores with spaces in the suggestion
-            const suggestionWithSpaces = suggestion.replace(/_/g, ' ');
-
-            const suggestionElement = document.createElement('div');
-            suggestionElement.textContent = suggestionWithSpaces;
-            suggestionElement.className = 'suggestion-item'; // Assign the class for styling
-            suggestionElement.onclick = () => handleSuggestionClick(suggestion);
-            suggestionsDatalist.appendChild(suggestionElement);
-        });
-    }
 
 
 // Attach an event listener to the search input
     const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
 
+
     const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
-    searchInputSugs.addEventListener('input', updateSuggestions);
+    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 100);
 
-    async function getSuggestions(inputValue: string): Promise<string[]> {
-        let sugs = [];
-        let suggestionInput = {
-            word: inputValue
-        };
 
-        try {
-            const response = await axios.post('http://localhost:3000/api/postgres/autoComplete', suggestionInput);
-            const data = response.data.data;
-            data.forEach(sug => {
-                sugs.push(sug.page_title);
-            });
-        } catch (error) {
-            console.error('Error:', error);
-        }
 
-        return sugs; // Return the suggestions
-    }
+    searchInputSugs.addEventListener('input', debouncedUpdateSuggestions);
+
+
+
 
     // Function to show suggestions
-    function showSuggestions() {
-        suggestionsDatalist.style.display = 'block';
-    }
 
-// Function to hide suggestions
+
+    // Function to hide suggestions
     function hideSuggestions() {
         suggestionsDatalist.style.display = 'none';
     }
 
-// Show suggestions when the input field is focused
-    searchInputSugs.addEventListener('focus', showSuggestions);
 
-// Hide suggestions with a delay when the input field loses focus
-    searchInputSugs.addEventListener('blur', () => {
-        setTimeout(hideSuggestions, 200); // Delay to allow click event on suggestions
-    });
 
-// Ensure clicking on a suggestion doesn't immediately hide the container
-    suggestionsDatalist.addEventListener('mousedown', (event) => {
-        event.preventDefault(); // Prevents the blur event on the input
-    });
+
 
     const searchData = {
         text: `('${searchText}')`,
@@ -696,17 +712,39 @@ function handleSearch() {
 
 }
 
+
+
 // Bind the search button event listener
 document.addEventListener("DOMContentLoaded", () => {
+
     const searchButton = document.getElementById("search-button");
     if (searchButton) {
         searchButton.addEventListener("click", handleSearch);
     }
 
+    const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
+    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 100);
+
+    const searchInput = document.getElementById("search-input") as HTMLInputElement;
+
+    searchInput.addEventListener("input", () => {
+        setSearchQuery(searchInput.value || "");
+    });
+
+
+
+    searchInputSugs.addEventListener('input', debouncedUpdateSuggestions);
+    searchInputSugs.addEventListener('focus', () => {
+        // Check if the input is not empty before showing suggestions
+        if (searchInputSugs.value.trim().length !== 0) {
+            showSuggestions();
+        }
+    });
+
     // Add event listener for Enter key press
-    const searchInput = document.getElementById("search-text");
-    if (searchInput) {
-        searchInput.addEventListener("keyup", (event) => {
+    const searchText = document.getElementById("search-text");
+    if (searchText) {
+        searchText.addEventListener("keyup", (event) => {
             if (event.key === "Enter") {
                 event.preventDefault(); // Prevent the default form submission
                 handleSearch();
