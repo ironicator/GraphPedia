@@ -94,7 +94,7 @@ function addWordToContainer(word) {
     const container = document.getElementById('word-container');
     const wordBox = document.createElement('span');
     wordBox.className = 'word-box';
-    wordBox.textContent = word.replace("_"," ");
+    wordBox.textContent = word.replaceAll("_"," ");
 
     const deleteBtn = document.createElement('span');
     deleteBtn.className = 'delete-btn';
@@ -295,7 +295,7 @@ function buildGraphFromJson(data) {
         }).filter(Boolean).length
 
         if (a > 1  && !attributes.isParent) attributes.color = "#9900ff"
-        if (a === parentsIds.length && !attributes.isParent) attributes.color = "#009933"
+        if (a === parentsIds.length && !attributes.isParent && a >1) attributes.color = "#009933"
 
 
     })
@@ -617,7 +617,8 @@ function handleSearch() {
         if (wordBoxes.length > 0){
             const words = Array.from(wordBoxes).map(box => {
                 // Assuming the word is the first child node of the word-box
-                return box.childNodes[0].textContent.trim().replace('\'', '\'\'').replace(' ', '_');
+                // @ts-ignore
+                return box.childNodes[0].textContent.trim().replace('\'', '\'\'').replaceAll(' ', '_');
             });
             return words.join(',');
         } else {
@@ -646,7 +647,7 @@ function handleSearch() {
     }
 
     const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
-    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 100);
+    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 300);
 
 
 
@@ -704,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
-    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 100);
+    const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 300);
 
     const searchInput = document.getElementById("search-input") as HTMLInputElement;
 
