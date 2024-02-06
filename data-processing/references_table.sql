@@ -16,7 +16,7 @@ SELECT
     sub2.page_id, sub2.page_title, sub2.reference_count, array_length(sub2.children, 1), sub2.refs, sub2.children
 FROM
     (SELECT
-         sub1.page_id, sub1.page_title, sub1.reference_count, array_remove(array_remove(array_remove(CAST(pl.page_children AS integer[]), 14919), 422994), 23538754) AS children, sub1.refs -- 14919: ISBN, 48361: Geographic_coordinate_system, 422994: Digital_object_identifier, 23538754: Wayback_machine, 35412202: Wikidata
+         sub1.page_id, sub1.page_title, sub1.reference_count, array_remove(array_remove(array_remove(array_remove(array_remove(CAST(pl.page_children AS integer[]), 14919), 422994), 23538754), 234930), 37575710) AS children, sub1.refs -- 14919: ISBN, 48361: Geographic_coordinate_system, 422994: Digital_object_identifier, 23538754: Wayback_machine, 35412202: Wikidata, 234930: ISSN, 37575710: H:S
      FROM
          (SELECT
               p.page_id, p.page_title, COUNT(p.page_id) AS reference_count, array_agg(allReferences.parent_id) AS refs

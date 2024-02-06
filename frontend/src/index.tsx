@@ -4,11 +4,10 @@ import circular from "graphology-layout/circular";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
 
-
 import FA2Layout from "graphology-layout-forceatlas2/worker";
 
 import axios from "axios"
-import { EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
+import {EdgeDisplayData, NodeDisplayData, PlainObject} from "sigma/types";
 import {animateNodes} from "sigma/utils/animate";
 
 // Function to build the graph from JSON data
@@ -95,7 +94,7 @@ function addWordToContainer(word) {
     const container = document.getElementById('word-container');
     const wordBox = document.createElement('span');
     wordBox.className = 'word-box';
-    wordBox.textContent = word;
+    wordBox.textContent = word.replace("_"," ");
 
     const deleteBtn = document.createElement('span');
     deleteBtn.className = 'delete-btn';
@@ -217,6 +216,8 @@ function buildGraphFromJson(data) {
     // Calculate the minimum and maximum reference counts for scaling
     const minReferenceCount = Math.min(...allReferenceCounts);
     const maxReferenceCount = Math.max(...allReferenceCounts);
+    // @ts-ignore
+    document.getElementById('labels-threshold').value = minReferenceCount
 
     function calculateMean(data) {
         const total = data.reduce((acc, val) => acc + val, 0);
@@ -264,6 +265,7 @@ function buildGraphFromJson(data) {
 
     // Add nodes with sizes
     // Add nodes with sizes and colors
+    let parentsIds = []
     data.forEach(item => {
         const fromId = item.from_id;
         let fromTitle = item.from_title;
@@ -274,6 +276,7 @@ function buildGraphFromJson(data) {
         // Set size for the parent node, if needed
         // You might want to set a default size or calculate it differently
         addNodeIfNeeded(fromId, fromTitle, 30, true, maxReferenceCount); // true for parent
+        parentsIds.push(fromId)
 
 
         item.to_id.forEach((childId, index) => {
@@ -281,16 +284,33 @@ function buildGraphFromJson(data) {
             const childReferenceCount = item.reference_count[index];
             const childSize = calculateNodeSize(childReferenceCount);
 
+
             addNodeIfNeeded(childId, childTitle, childSize, false, item.reference_count[index]); // false for child
             addEdgeIfNeeded(fromId, childId);
         });
     });
+    graph.forEachNode((node ,attributes)=> {
+        let a = parentsIds.map(parentId => {
+            return graph.areNeighbors(node, parentId)
+        }).filter(Boolean).length
+
+        if (a > 1  && !attributes.isParent) attributes.color = "#9900ff"
+        if (a === parentsIds.length && !attributes.isParent) attributes.color = "#009933"
+
+
+    })
+
+
+
 
 
     function addNodeIfNeeded(id, label, size, isParent, referenceCount) {
+
         if (!graph.hasNode(id)) {
             // Node does not exist yet, add it with the appropriate color
-            const color = isParent ? "#4444aa" : "#aa4444";
+            let color = isParent ? "#4444aa" : "#aa4444";
+
+
             const Parent = !!isParent;
             if(typeof label === 'string'){
                 label = label.replace(/_/g, ' ');
@@ -307,7 +327,9 @@ function buildGraphFromJson(data) {
             graph.updateNode(id, node => {
                 return { ...node, color: "#4444aa", isParent:true};
             });
+
         }
+
     }
 
     // Position nodes on a circle, then run Force Atlas 2 for a while to get
@@ -406,21 +428,12 @@ function buildGraphFromJson(data) {
         // stop fa2 if running
         if (fa2Layout.isRunning()) stopFA2();
         if (cancelCurrentAnimation) cancelCurrentAnimation();
-
         //since we want to use animations we need to process positions before applying them through animateNodes
         const circularPositions = circular(graph, { scale: 100 });
-
         cancelCurrentAnimation = animateNodes(graph, circularPositions, { duration: 2000, easing: "linear" });
     }
     // bind method to the random button
     circularButton.addEventListener("click", circularLayout);
-
-
-
-    const searchInput = document.getElementById("search-input") as HTMLInputElement;
-
-
-
 
     // Delay the initialization of Sigma
     renderer = new Sigma(graph, container);
@@ -604,7 +617,7 @@ function handleSearch() {
         if (wordBoxes.length > 0){
             const words = Array.from(wordBoxes).map(box => {
                 // Assuming the word is the first child node of the word-box
-                return box.childNodes[0].textContent.trim().replace('\'', '\'\'');
+                return box.childNodes[0].textContent.trim().replace('\'', '\'\'').replace(' ', '_');
             });
             return words.join(',');
         } else {
@@ -631,11 +644,6 @@ function handleSearch() {
         // @ts-ignore
         threshold = parseInt(document.getElementById("labels-threshold").value)
     }
-
-
-// Attach an event listener to the search input
-    const suggestionsDatalist = document.getElementById('suggestions') as HTMLDataListElement;
-
 
     const searchInputSugs = document.getElementById('search-text') as HTMLInputElement;
     const debouncedUpdateSuggestions = debounce(() => updateSuggestions(), 100);
@@ -713,6 +721,10 @@ document.addEventListener("DOMContentLoaded", () => {
             showSuggestions();
         }
     });
+    searchInputSugs.addEventListener('blur', ()=>{
+        setTimeout(hideSuggestions, 200)
+    });
+
 
     // Add event listener for Enter key press
     const searchText = document.getElementById("search-text");

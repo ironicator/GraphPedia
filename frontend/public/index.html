@@ -6,11 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet"  id="dynamic-style" type="text/css" href="home.css">
   <link rel="icon" href="gene-sequence-svgrepo-com.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <title>Graphipedia</title>
   <style>
-    html {
-      font-family: 'Roboto', sans-serif;
+    html, #search-option, .word-box, #search-button {
+      text-align: center;
+      font-family: 'Open-sans', sans-serif;
       font-size: 15px; /* Adjust size as needed */
       font-weight: 400; /* Choose 400 for regular, 500 for medium, and 700 for bold */
       line-height: 1.6; /* Adjust line height for better readability */
@@ -92,7 +93,7 @@
 
 <div class="panels aftersearch">
   <div class="panel">
-    <input type="search" id="search-input" placeholder="Try searching for a link..." />
+    <input type="search" id="search-input" placeholder="Try searching for an article..." />
 
   </div>
   <div class="panel">
@@ -104,11 +105,11 @@
 
 <div id="search">
   <div id="word-container"></div>
-  <input type="search" id="search-text" list="suggestions" class="input-mimic" placeholder="Try searching for a text..." />
+  <input type="search" id="search-text" list="suggestions" class="input-mimic" placeholder="Try searching for an article..." />
   <div id="suggestions"></div>
   <select id="search-option">
-    <option value="1">All Nodes Depth = 1</option>
-    <option value="2">All Nodes Depth = 2</option>
+    <option value="1">All Nodes (Depth 1)</option>
+    <option value="2">All Nodes (Depth 2)</option>
     <option value="3">Only Shared Nodes</option>
   </select>
   <button id="search-button">Search</button>
