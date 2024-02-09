@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 599.44 102.69">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: BodoniSvtyTwoSCITCTT-Book, 'Bodoni 72 Smallcaps';
+        font-size: 92.27px;
+      }
+
+      .cls-2 {
+        fill: #e2545f;
+      }
+
+      .cls-2, .cls-3, .cls-4 {
+        stroke: #000;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-3 {
+        fill: #3b3bff;
+      }
+
+      .cls-4 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g>
+    <line class="cls-4" x1="34.06" y1="40.09" x2="76.1" y2="80.51"/>
+    <circle class="cls-3" cx="34.4" cy="40.43" r="33.9"/>
+    <circle class="cls-2" cx="76.1" cy="80.77" r="18.65"/>
+  </g>
+  <text class="cls-1" transform="translate(90.42 78.52)"><tspan x="0" y="0">GraphIPEDIA</tspan></text>
+</svg>

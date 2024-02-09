@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet"  id="dynamic-style" type="text/css" href="home.css">
+  <link rel="icon" href="gene-sequence-svgrepo-com.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>Graphipedia</title>
+  <style>
+    #myModal p{
+      text-align: center;
+      font-family: 'Open-sans', sans-serif;
+      font-size: 35px; /* Adjust size as needed */
+      font-weight: 400; /* Choose 400 for regular, 500 for medium, and 700 for bold */
+      line-height: 1.6; /* Adjust line height for better readability */
+      color: #000000; /* Dark grey color for better readability */
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    }
+    html, #search-option, .word-box, #search-button {
+      font-family: 'Open-sans', sans-serif;
+      font-size: 15px; /* Adjust size as needed */
+      font-weight: 400; /* Choose 400 for regular, 500 for medium, and 700 for bold */
+      line-height: 1.6; /* Adjust line height for better readability */
+      color: #000000; /* Dark grey color for better readability */
+      text-align: justify; /* Justify text for a clean look */
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    }
+    .tooltip {
+      display: none; /* Hide by default */
+      position: absolute; /* Position it */
+      background-color: #333; /* Dark background */
+      color: #fff; /* Light font color */
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px 10px;
+      z-index: 1; /* Place it above other items */
+
+      /* Position it above the range input (adjust as needed) */
+      top: 100%;
+      left: 50%;
+
+      /* Optional: Add an arrow */
+      border: 1px solid #ddd; /* Light grey border */
+    }
+
+    /* Arrow (optional) */
+    .tooltip::after {
+      content: " ";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #f9f9f9 transparent transparent transparent;
+    }
+
+
+  </style>
+</head>
+<body>
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Sorry, there's no result, try again bitte🤠</p>
+  </div>
+</div>
+
+<div id="sigma-container"></div>
+<div class="aftersearch" id="loader"><span>⌛</span></div>
+<div class="logo-container" id="logo">
+  <img src="./graphipedia_logo.svg" alt="Custom Logo">
+</div>
+
+
+<div id="buttons" class="aftersearch">
+  <button id="random">
+    <span><img alt="" src="./GiPerspectiveDiceSixFaces.svg" />random</span>
+  </button>
+
+  <button id="forceatlas2">
+        <span>
+          <img alt="" id="forceatlas2-start-label" src="./BiPlay.svg" />
+          <img alt="" id="forceatlas2-stop-label" style="display: none" src="./BiPause.svg" />
+          Force Atlas 2
+        </span>
+  </button>
+  <button id="circular">
+    <span><img alt="" src="./BiLoaderCircle.svg" />circular</span>
+  </button>
+  <input id="threshold" type="checkbox">Search with Threshold
+  <div class="tooltip" id="thresholdTooltip">Search with threshold</div>
+
+  <div class="tooltip" id="range-tooltip">Filter some value by moving the threshold</div>
+
+  <input id="labels-threshold" type="range" min="0" max="100000" step="1000" />
+
+</div>
+
+<div class="panels aftersearch">
+  <div class="panel">
+    <input type="search" id="search-input" placeholder="Try searching for an article..." />
+
+  </div>
+  <div class="panel">
+    <div><img id="descIcon" alt="" src="./info.png" /><strong>Description</strong></div>
+    <div id="tooltip" class="hidden"></div>
+
+  </div>
+</div>
+
+<div id="search">
+  <div id="word-container"></div>
+  <input type="search" id="search-text" list="suggestions" class="input-mimic" placeholder="Try searching for an article..." />
+  <div id="suggestions"></div>
+  <select id="search-option">
+    <option value="1">All Nodes (Depth 1)</option>
+    <option value="2">All Nodes (Depth 2)</option>
+    <option value="3">Only Shared Nodes</option>
+  </select>
+  <button id="search-button">Search</button>
+</div>
+
+<script>var exports = {};</script>
+<script>
+  const enableThreshold = document.getElementById('threshold')
+  const rangeInput = document.getElementById('labels-threshold');
+  const tooltip1 = document.getElementById('range-tooltip');
+  const tooltip2 = document.getElementById('thresholdTooltip');
+  enableThreshold.addEventListener('mouseover', () => {
+    tooltip2.style.display = 'block';
+  });
+
+  enableThreshold.addEventListener('mouseout', () => {
+    tooltip2.style.display = 'none';
+  });
+
+  rangeInput.addEventListener('mouseover', () => {
+    tooltip1.style.display = 'block';
+  });
+
+  rangeInput.addEventListener('mouseout', () => {
+    tooltip1.style.display = 'none';
+  });
+</script>
+
+
+</body>
+</html>
